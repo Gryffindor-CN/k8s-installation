@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: lcv3-dev
+spec:
+  clusterIP: ""
+  type: NodePort
+  ports:
+  - port: 3306
+    nodePort: 30006
+    name: mysql
+  - port: 9104
+    protocol: TCP
+    targetPort: 9104
+    name: mysql-exporter
+  selector:
+    app: mysql
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: lcv3-dev
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql-dev
+        env:
+          # Use secret in real usage
+        - name: MYSQL_ROOT_PASSWORD
+          value: password
+        ports:
+        - containerPort: 3306
+          name: mysql-port
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+      - name: mysql-exporter
+        env:
+        - name: DATA_SOURCE_NAME
+          value: exporter:123456@(localhost:3306)/
+        image: prom/mysqld-exporter
+        imagePullPolicy: Always
+        name: mysql-exporter
+        ports:
+        - containerPort: 9104
+          protocol: TCP
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc

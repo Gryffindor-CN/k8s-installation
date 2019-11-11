@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: es-data-db-pvc
+  namespace: logging
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: "es-data-db"
+  resources:
+    requests:
+      storage: 100Gi

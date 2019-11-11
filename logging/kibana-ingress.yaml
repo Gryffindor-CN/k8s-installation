@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+   name: kibana-ingress
+   namespace: logging
+spec:
+   rules:
+   - host: kibana.dev.wiken.tk
+     http:
+       paths:
+       - path: /
+         backend:
+          serviceName: kibana
+          servicePort: 5601

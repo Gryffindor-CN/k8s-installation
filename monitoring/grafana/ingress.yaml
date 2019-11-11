@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+   name: grafana-ingress
+   namespace: kube-system
+spec:
+   rules:
+   - host: grafana.dev.wiken.tk
+     http:
+       paths:
+       - path: /
+         backend:
+          serviceName: grafana
+          servicePort: 3000
