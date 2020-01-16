@@ -27,3 +27,6 @@ kubectl create -f fluentd-daemonset.yaml
 # 安装kibana
 kubectl create -f kibana.yaml
 kubectl create -f kibana-ingress.yaml
+
+# 清除nfs-client-provisioner
+# helm delete es-nfs --purge
