@@ -1,0 +1,33 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: rabbitmq-service
+  namespace: dev
+spec:
+  type: NodePort
+  ports:
+    - name: mangement
+      protocol: TCP
+      port: 15672
+      nodePort: 32001
+    - name: smp 
+      protocol: TCP
+      port: 5672
+      nodePort: 32002
+  selector:
+    app: rabbitmq
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: dev
+  labels:
+    app: rabbitmq
+spec:
+  clusterIP: None
+  ports:
+  - port: 5672
+    name: amqp
+  selector:
+    app: rabbitmq
