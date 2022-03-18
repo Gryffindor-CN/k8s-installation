@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nsqd
+  namespace: common
+  labels:
+    app: nsqd
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app: nsqd
+  template:
+    metadata:
+      labels:
+        app: nsqd
+    spec:
+      containers:
+        - name: nsq
+          image: 'cr.lonntec.cn/lonntec-portway/nsq:v1.2.0'
+          command:
+            - nsqd
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      imagePullSecrets: 
+        - name: cr.lonntec.cn
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nsqd-svc
+  namespace: common
+  labels:
+    app: nsqd
+spec:
+  type: NodePort
+  ports:
+    - name: port-4150
+      protocol: TCP
+      port: 4150
+      targetPort: 4150
+      nodePort: 4150
+    - name: port-4151
+      protocol: TCP
+      port: 4151
+      targetPort: 4151
+      nodePort: 4151
+  selector:
+    app: nsqd
