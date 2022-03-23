@@ -63,7 +63,6 @@ spec:
                     values:
                       - nacos
               topologyKey: "kubernetes.io/hostname"
-      serviceAccountName: nfs-client-provisioner
       initContainers:
         - name: peer-finder-plugin-install
           image: nacos/nacos-peer-finder-plugin:1.1
