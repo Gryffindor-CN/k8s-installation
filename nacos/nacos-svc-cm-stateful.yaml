@@ -1,28 +1,16 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: nacos-headless
   namespace: devcenter-services
   labels:
-    app: nacos
-  annotations:
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    app: nacos-headless
 spec:
   ports:
     - port: 8848
       name: server
       targetPort: 8848
-    - port: 9848
-      name: client-rpc
-      targetPort: 9848
-    - port: 9849
-      name: raft-rpc
-      targetPort: 9849
-    ## 兼容1.4.x版本的选举端口
-    - port: 7848
-      name: old-raft-rpc
-      targetPort: 7848
-  clusterIP: None
   selector:
     app: nacos
 ---
@@ -61,45 +49,27 @@ spec:
                   - key: "app"
                     operator: In
                     values:
-                      - nacos
+                      - nacos-headless
               topologyKey: "kubernetes.io/hostname"
-      initContainers:
-        - name: peer-finder-plugin-install
-          image: nacos/nacos-peer-finder-plugin:1.1
-          imagePullPolicy: Always
-          volumeMounts:
-            - mountPath: /home/nacos/plugins/peer-finder
-              name: data
-              subPath: peer-finder
       containers:
-        - name: nacos
+        - name: k8snacos
           imagePullPolicy: Always
-          image: nacos/nacos-server:latest
+          image: nacos/nacos-server:v1.4.3
           resources:
             requests:
               memory: "2Gi"
               cpu: "500m"
           ports:
             - containerPort: 8848
-              name: client-port
-            - containerPort: 9848
-              name: client-rpc
-            - containerPort: 9849
-              name: raft-rpc
-            - containerPort: 7848
-              name: old-raft-rpc
+              name: client
           env:
             - name: NACOS_REPLICAS
               value: "3"
-            - name: SERVICE_NAME
-              value: "nacos-headless"
-            - name: DOMAIN_NAME
-              value: "cluster.local"
-            - name: POD_NAMESPACE
+            - name: MYSQL_SERVICE_HOST
               valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: metadata.namespace
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: mysql.host
             - name: MYSQL_SERVICE_DB_NAME
               valueFrom:
                 configMapKeyRef:
@@ -122,26 +92,10 @@ spec:
                   key: mysql.password
             - name: NACOS_SERVER_PORT
               value: "8848"
-            - name: NACOS_APPLICATION_PORT
-              value: "8848"
             - name: PREFER_HOST_MODE
-              value: "nacos.dev.labelcloud.cn"
+              value: "hostname"
             - name: NACOS_SERVERS
-              value: "nacos-0.nacos-headless.devcenter-services.svc.cluster.local:8848 nacos-1.nacos-headless.devcenter-services.svc.cluster.local:8848 nacos-2.nacos-headless.devcenter-services.svc.cluster.local:8848"
-          volumeMounts:
-            - name: data
-              mountPath: /home/nacos/plugins/peer-finder
-              subPath: peer-finder
-            - name: data
-              mountPath: /home/nacos/data
-              subPath: data
-            - name: data
-              mountPath: /home/nacos/logs
-              subPath: logs
-      volumes:
-        - name: data
-          persistentVolumeClaim:
-            claimName: nacos-pvc
+              value: "nacos-0.nacos-headless.default.svc.cluster.local:8848 nacos-1.nacos-headless.default.svc.cluster.local:8848 nacos-2.nacos-headless.default.svc.cluster.local:8848"
   selector:
     matchLabels:
       app: nacos
